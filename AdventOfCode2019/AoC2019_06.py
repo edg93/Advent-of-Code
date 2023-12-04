@@ -3,29 +3,42 @@ with open("AoC2019_06_data.txt", "r") as file:
 
 data = data.split('\n')
 
-def add_orbits(d,o,orbits_toAdd,done):
-    for i in d[o]:
-        if i in d.keys() and i not in done:
-            done.add(i)
-            orbits_toAdd = orbits_toAdd | add_orbits(d,i,orbits_toAdd,done)
-            return add_orbits(d,o,orbits_toAdd,done)
-        else:
-            return orbits_toAdd
-
-orbits = set()
-orbits_dict = {}
-
-for x in data:
-    i,o=x.split(')')
-    if o in orbits_dict.keys():
-        orbits_dict[o].add(i)
+def distance(d,inside):
+    for outside in orbits_io[inside]:
+        satelites.add((outside,d+1))
+        if outside in orbits_io.keys():
+            distance(d+1,outside)
+            
+def path(satelite,p,origin):
+    p.append(satelite)
+    if satelite != 'COM':
+        path(orbits_oi[satelite],p,origin)
     else:
-        orbits_dict[o]={i}
+        paths[origin]=p
+    
+satelites = {('COM',0)}
+orbits_io = {}
+orbits_oi = {}
+paths = {}
+
 for x in data:
     i,o=x.split(')')
-    for obj in add_orbits(orbits_dict,o,set(),set()):
-        orbits_dict[o].add(obj)
-    for obj in orbits_dict[o]:
-        orbits.add((obj,o))
-        
-print(len(orbits))
+    orbits_oi[o]=i
+    if i in orbits_io.keys():
+        orbits_io[i].add(o)
+    else:
+        orbits_io[i]={o}
+    
+distance(0,'COM')
+ans1=0
+for x,d in satelites:
+    ans1+=d
+    path(x,[],x)
+print(ans1)
+
+l1 = paths['YOU']
+l2 = paths['SAN']
+for i in range(1,len(l1)):
+    if l1[len(l1)-i]!=l2[len(l2)-i]:
+        print(len(l1)-i+len(l2)-i)
+        break
