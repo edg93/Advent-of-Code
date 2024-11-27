@@ -17,4 +17,4 @@ for line in data:
         copies[n+i]+=copies[n-1]
     
 ans2=sum(copies)
-print(int(ans1),ans2)
+print(ans1,ans2)

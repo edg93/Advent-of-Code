@@ -8,16 +8,12 @@ def moves(position):
     for mov in DIR:
         r,c = position
         h = ord(data[r][c])
-        r += mov[0]
-        c += mov[1]
-        if 0<=r<R and 0<=c<C and ord(data[r][c])-h>=-1:
-            moves.add((r,c))
+        r1 = r + mov[0]
+        c1 = c + mov[1]
+        if 0<=r1<R and 0<=c1<C and ord(data[r1][c1])-h>=-1:
+            moves.add((r1,c1))
     return moves
 
-    for line in data:
-        print(line)
-    for line in dist:
-        print(line)
 for i in range(len(data)):
     for j in range(len(data[0])):
         if data[i][j] == 'S':
