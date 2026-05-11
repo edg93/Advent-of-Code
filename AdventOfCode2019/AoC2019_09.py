@@ -9,4 +9,4 @@ for part in [1,2]:
     d = {}
     for n,i in enumerate(data):
         d[n]=i
-    print(computer(d,part)[-1])
+    print(computer(d,[part])[-1])

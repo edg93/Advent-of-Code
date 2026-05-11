@@ -1,53 +1,76 @@
-with open("AoC2020_19_data.txt", "r") as file:
-    data = file.read()
-Rules,messages=data.split('\n\n')
-messages,Rules = messages.split('\n'),Rules.split('\n')
-rules = {}
-solved = set()
+def parse_input(filename):
+    with open(filename) as f:
+        rules_raw, messages = f.read().split("\n\n")
 
-for line in Rules:
-    n,line = line.split(': ')
-    if '"' in line:
-        rules[int(n)]=line.replace('"','')
-        solved.add(int(n))
-    else:
-        line = [tuple([int(x) for x in option.split()]) for option in line.split(' | ')]
-        rules[int(n)]=set(line)
-        
-while len(solved)!=len(rules):
-    for n,options in rules.items():
-        if n in solved:
-            continue
-        to_remove,to_add = set(),set()
-        for option in options:
-            for i,x in enumerate(option):
-                if x in solved:
-                    option_copy=[x for x in option]
-                    to_remove.add(tuple(option_copy))
-                    if type(rules[x])==str:
-                        option_copy[i]=rules[x]
-                        to_add.add(tuple(option_copy))
-                    else:
-                        for op in rules[x]:
-                            option_copy[i]=op
-                            to_add.add(tuple(option_copy))
-       
-        for option in to_add:
-            options.add(option)
-        for option in to_remove:
-            options.remove(option)
-        ok = True
-        for option in options:
-            for x in option:
-                if type(x)==int:
-                    ok=False
+    rules = {}
+    for line in rules_raw.splitlines():
+        idx, rest = line.split(": ")
+        idx = int(idx)
+        if '"' in rest:
+            rules[idx] = rest.replace('"', '')
+        else:
+            rules[idx] = [
+                list(map(int, option.split()))
+                for option in rest.split(" | ")
+            ]
+
+    return rules, messages.splitlines()
+
+def count_matches(rules, messages):
+    def match(rule_id, message):
+        """
+        Returns a set of suffixes remaining after matching rule_id
+        against the start of message.
+        """
+        rule = rules[rule_id]
+
+        # Literal rule
+        if isinstance(rule, str):
+            if message.startswith(rule):
+                return {message[len(rule):]}
+            return set()
+
+        # Non-literal
+        remainders = set()
+        for option in rule:
+            current = {message}
+            for subrule in option:
+                next_current = set()
+                for m in current:
+                    next_current |= match(subrule, m)
+                current = next_current
+                if not current:
                     break
-        if ok:
-            rules[n] = set([''.join(option) for option in options])
-            solved.add(n)
-ans1=0
-for message in messages:
-    if message in rules[0]:
-        ans1+=1
+            remainders |= current
+
+        return remainders
+
+    count = 0
+    for msg in messages:
+        if "" in match(0, msg):
+            count += 1
         
-print(ans1)
+    return count
+
+
+def solve(filename):
+    # -------- Part 1 --------
+    rules, messages = parse_input(filename)
+    part1 = count_matches(rules, messages)
+
+    # -------- Part 2 --------
+    # Modify rules 8 and 11 *only*
+    rules[8] = [[42], [42, 8]]
+    rules[11] = [[42, 31], [42, 11, 31]]
+
+    part2 = count_matches(rules, messages)
+
+    return part1, part2
+
+
+for file in ["AoC2020_19_ex.txt", "AoC2020_19_data.txt"]:
+    p1, p2 = solve(file)
+    print(file)
+    print("Part 1:", p1)
+    print("Part 2:", p2)
+    print()

@@ -16,13 +16,13 @@ for line in data:
             for y in range(dy[0],dy[1]+1):
                 for z in range(dz[0],dz[1]+1):
                     if a=='on':
-                        lights[(x,y,z)]='on'
+                        lights[(x,y,z)]=True
                     else:
-                        lights[(x,y,z)]='off'
+                        lights[(x,y,z)]=False
 
 sol1=0                
 for point in lights:
-    if lights[point]=='on':
+    if lights[point]:
         sol1+=1
         
 print(sol1)

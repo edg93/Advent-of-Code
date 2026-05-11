@@ -1,10 +1,10 @@
-with open("AoC2023_21_data.txt", "r") as file:
+with open("AoC2023_21_test.txt", "r") as file:
     data = file.read()
 
 data = data.split('\n')
 R,C = len(data),len(data[0])
 DIR = [(0,1),(1,0),(-1,0),(0,-1)]
-
+ans = [0,0]
 rocks = set()
 for r,line in enumerate(data):
     for c,ch in enumerate(line):
@@ -21,6 +21,8 @@ def move(points):
                 new_points.add((point[0]+d[0],point[1]+d[1]))
     return new_points
 
-for _ in range(3649):
+for _ in range(6):
     points = move(points)
-    print(_+1, len(points))
+    
+ans[0] = len(points)
+print(ans)

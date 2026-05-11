@@ -1,43 +1,56 @@
-with open("AoC2019_14_ex.txt", "r") as file:
+from collections import defaultdict
+with open("AoC2019_14_data.txt", "r") as file:
     data = file.read()
     
 data = data.split('\n')
 
-d = {}
+reactions = {}
+ans = [0,0]
 
-for n,line in enumerate(data):
-    ingredients,output = line.split(' => ')
-    output = output.split(' ')
-    output[0] = int(output[0])
-    output = tuple(output)
-    ingredients = ingredients.split(', ')
-    for k,ingredient in enumerate(ingredients):
-        ingredient = ingredient.split(' ')
-        ingredient[0] = int(ingredient[0])
-        ingredients[k]=tuple(ingredient)
-    d[output[1]] = output[0],tuple(ingredients)
+for line in data:
+    ingredients_str, output_str = line.split(' => ')
+    out_qty, out_chem = output_str.split()
+    out_qty = int(out_qty)
+    
+    ingredients = [ (int(qty), chem) for qty, chem in 
+                    (ing.split() for ing in ingredients_str.split(', ')) ]
+    
+    reactions[out_chem] = (out_qty, ingredients)
 
-print(d['FUEL'])
-
-end = False
-
-produced = {}
-needed = {'FUEL':1}
-while not end:
-    for x,quantity_needed in needed.items():
+def ore_required(fuel_amount):
+    needs = [(fuel_amount, 'FUEL')]
+    storage = defaultdict(int)
+    ore = 0
+    
+    while needs:
+        quantity, material = needs.pop()
+        if material == 'ORE':
+            ore += quantity
+            continue
+        if storage[material] >= quantity:
+            storage[material] -= quantity
+            continue
+        quantity -= storage[material]
+        storage[material] = 0
         
-        quantity, ingredients = d[x]
-        if x in produced.keys():
-            produced[x] += quantity
-        else:
-            produced[x] = quantity
-        for n,ingredient in ingredients:
-            print(ingredient)
-            if ingredient in needed.keys():
-                needed[ingredient] += n
-            else:
-                needed[ingredient] = n
-        end = True
+        produced, ingredients = reactions[material]
+        times = -(-quantity // produced)  # ceiling division
+        storage[material] += times * produced - quantity
+        
+        for n, ing in ingredients:
+            needs.append((n * times, ing))
+    return ore
 
-    if len(needed)==0:
-        end = True
+ans[0] = ore_required(1)
+
+# Binary search
+low, high = 1, 10**12
+while low < high:
+    mid = (low + high + 1) // 2
+    if ore_required(mid) <= 1_000_000_000_000:
+        low = mid
+    else:
+        high = mid - 1
+
+ans[1] = low
+print(ans)

@@ -10,5 +10,5 @@ for ip in [1,5]:
     output = 0
     i,base=0,0
     while output == 0:
-        data,i,base,output = computer(data,ip,i,base)
+        data,i,base,output = computer(data,[ip],i,base)
     print(output)

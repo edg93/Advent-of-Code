@@ -11,133 +11,78 @@ number = [ 9 for _ in range(14)]
 scripts = []
 s = []
 for i,line in enumerate(data):
-    if line.split(' ')[0] == 'inp':
+    if line.split()[0] == 'inp':
         if s != []:
             scripts.append(s)
         s = []
     s.append(line)
 
-def read_line(line,variables,counter):
-    line = line.split(' ')
-    rule,line = line[0],line[1:]
-    if rule == 'inp':
-        #variables[line[0]]=number[counter]
-        counter+=1
-    else:
-        sign=1
-        if line[1][0]=='-':
-            sign,line[1] = -1,line[1][1:]
-        if rule == 'add':
-            if line[1].isnumeric():
-                variables[line[0]]+=sign*int(line[1])
-            else:
-                variables[line[0]]+=variables[line[1]]
-        elif rule == 'mul':
-            if line[1].isnumeric():
-                variables[line[0]]*=sign*int(line[1])
-            else:
-                variables[line[0]]*=variables[line[1]]
-        elif rule == 'div':
-            if line[1].isnumeric():
-                if line[1]=='0':
-                    return None,counter
-                variables[line[0]] = variables[line[0]]//(sign*int(line[1]))
-            else:
-                if variables[line[1]] == 0:
-                    return None,counter
-                variables[line[0]]*=variables[line[0]]//variables[line[1]]
-        elif rule == 'mod':
-            if variables[line[0]]<0:
-                return None,counter
-            else:
-                if line[1].isnumeric():
-                    if sign*int(line[1])<=0:
-                        return None,counter
-                    variables[line[0]] = variables[line[0]]%(sign*int(line[1]))
-                else:
-                    if variables[line[1]]<=0:
-                        return 'ERROR',counter
-                    variables[line[0]]*=variables[line[0]]%variables[line[1]]
-        elif rule == 'eql':
-            if line[1].isnumeric():
-                if variables[line[0]]==(sign*int(line[1])):
-                    variables[line[0]]=1
-                else:
-                    variables[line[0]]=0
-            else:
-                if variables[line[0]]==variables[line[1]]:
-                    variables[line[0]]=1
-                else:
-                    variables[line[0]]=0
-    return variables,counter
-    
-for l in data:
-    my_variables,my_counter = read_line(l,my_variables,my_counter)
-    if my_variables == None:
-        print('stop')
-        break
-    #print(my_variables)
+scripts.append(s)
 
-def run(ip,script,variables):
+def get_value(i,variables):
+    try:
+        return int(i)
+    except ValueError:
+        return variables[i]
+
+def run_block(ip,script,variables):
     for line in script:
         line = line.split(' ')
-        rule,line = line[0],line[1:]
-        if rule == 'inp':
+        op,line = line[0],line[1:]
+        if op == 'inp':
             variables[line[0]]=ip
         else:
-            sign=1
-            if line[1][0]=='-':
-                sign,line[1] = -1,line[1][1:]
-            if rule == 'add':
-                if line[1].isnumeric():
-                    variables[line[0]]+=sign*int(line[1])
-                else:
-                    variables[line[0]]+=variables[line[1]]
-            elif rule == 'mul':
-                if line[1].isnumeric():
-                    variables[line[0]]*=sign*int(line[1])
-                else:
-                    variables[line[0]]*=variables[line[1]]
-            elif rule == 'div':
-                if line[1].isnumeric():
-                    if line[1]=='0':
-                        return None
-                    variables[line[0]] = variables[line[0]]//(sign*int(line[1]))
-                else:
-                    if variables[line[1]] == 0:
-                        return None
-                    variables[line[0]]*=variables[line[0]]//variables[line[1]]
-            elif rule == 'mod':
-                if variables[line[0]]<0:
+            a,b = line
+            b = get_value(b,variables)
+            if op == 'add':
+                variables[a]+=b
+            elif op == 'mul':
+                variables[a]*=b
+            elif op == 'div':
+                if b == 0:
                     return None
+                variables[a] //= b
+            elif op == 'mod':
+                if variables[a]<0 or b <= 0:
+                    return None
+                variables[a] %= b
+            elif op == 'eql':
+                if variables[a]==b:
+                    variables[a]=1
                 else:
-                    if line[1].isnumeric():
-                        if sign*int(line[1])<=0:
-                            return None
-                        variables[line[0]] = variables[line[0]]%(sign*int(line[1]))
-                    else:
-                        if variables[line[1]]<=0:
-                            return 'ERROR'
-                        variables[line[0]]*=variables[line[0]]%variables[line[1]]
-            elif rule == 'eql':
-                if line[1].isnumeric():
-                    if variables[line[0]]==(sign*int(line[1])):
-                        variables[line[0]]=1
-                    else:
-                        variables[line[0]]=0
-                else:
-                    if variables[line[0]]==variables[line[1]]:
-                        variables[line[0]]=1
-                    else:
-                        variables[line[0]]=0
+                    variables[a]=0
     return variables
 
+def next_z(z, w, block):
+    vars = {'w':0,'x':0,'y':0,'z':z}
+    run_block(w, block, vars)
+    return vars['z']
 
-sol = []
-for k in range(len(scripts)):
-    for n in range(1,10):
-        my_variables = {'w':0,'x':0,'y':0,'z':0}
 
-        print(run(n,scripts[k],my_variables))
-        
-    break
+states = {0: ""}  # z -> model prefix
+
+for i, block in enumerate(scripts):
+    new_states = {}
+
+    remaining = 14 - i - 1  # blocks left after this one
+
+    for z, prefix in states.items():
+        for w in range(1, 10):
+            nz = next_z(z, w, block)
+
+            # ❌ invalid ALU result
+            if nz is None:
+                continue
+
+            # 🔪 PRUNE 2: mathematical bound
+            if nz > 26 ** remaining:
+                continue
+
+            candidate = prefix + str(w)
+
+            # keep best prefix for this nz
+            if nz not in new_states or candidate > new_states[nz]:
+                new_states[nz] = candidate
+
+    states = new_states
+    print(f"After block {i}: {len(states)} states")

@@ -1,25 +1,48 @@
-with open("AoC2023_25_data.txt", "r") as file:
-    data = file.read()
 
-data = data.split('\n')
-ans1,ans2=0,0
+import networkx as nx
+import matplotlib.pyplot as plt
 
-nodes = set()
-edges = {}
+# --- Load graph ---
+with open("AoC2023_25_data.txt") as f:
+    data = f.read().splitlines()
 
+
+from collections import defaultdict
+from heapq import heappop, heappush
+from itertools import pairwise
+
+M = defaultdict(set)
 for line in data:
-    start,ends = line.split(': ')
-    ends = ends.split()
-    nodes.add(start)
-    for end in ends:
-        nodes.add(end)
-        if start in edges.keys():
-            edges[start].append(end)
-        else:
-            edges[start] = [end]
-        if end in edges.keys():
-            edges[end].append(start)
-        else:
-            edges[end] = [start]
-            
-    
+    src,dst = line.split(': ')
+    for de in dst.split():
+        M[src].add(de)
+        M[de].add(src)
+
+def bfs(start, exclusions = {}):
+    visited = {start:(0,[start])}
+    heap = [(0,start,[start])]
+    while len(heap)>0:
+        dist, node, path = heappop(heap)
+        for de in M[node]:
+            if (node,de) in exclusions: continue
+            if de not in visited:
+                visited[de] = (dist+1, path+[de])
+                heappush(heap,(dist+1,de,path+[de]))
+    return (len(visited),visited, node)
+def findcut():
+    start = next(k for k in M)
+    _,visited,stop = bfs(start)
+    for s,d in pairwise(visited[stop][1]):
+        exclusions = {(s,d),(d,s)}
+        _,visited2,_ = bfs(start, exclusions)
+        for s2,d2 in pairwise(visited2[stop][1]):
+            exclusions = {(s,d),(d,s), (s2,d2),(d2,s2)}
+            _,visited3,_ = bfs(start, exclusions)
+            for s3,d3 in pairwise(visited3[stop][1]):
+                exclusions = {(s,d),(d,s), (s2,d2),(d2,s2), (s3,d3),(d3,s3)}
+                lena,_,_ = bfs(start, exclusions)
+                if len(M) != lena:
+                    print((s,d), (s2,d2), (s3,d3))
+                return (lena*(len(M)-lena))
+
+print("AoC 2023:", findcut())

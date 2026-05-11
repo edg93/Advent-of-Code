@@ -10,7 +10,7 @@ data = {n:x for n,x in enumerate(data0)}
 outputs = []
 output,i,base = 0,0,0
 while output!=None:
-    data,i,base,output = computer(data,0,i,base)
+    data,i,base,output = computer(data,[0],i,base)
     outputs.append(output)
     
 ans1=0
@@ -31,7 +31,7 @@ paddle = ball-1
 ans2 = 0
 while output!=None:
     for k in range(3):
-        data,i,base,output = computer(data,ip,i,base)
+        data,i,base,output = computer(data,[ip],i,base)
         if output == None:
             break
         a[k]=output

@@ -11,7 +11,7 @@ def paint(data,pos=(0,0),orientation=0,i=0,base=0):
             ip = 1
         else:
             ip = 0
-        data,i,base,colour = computer(data,ip,i,base)
+        data,i,base,colour = computer(data,[ip],i,base)
         painted_panels.add(pos)
         if colour == 0 and pos in white_panels:
             white_panels.remove(pos)
@@ -19,7 +19,7 @@ def paint(data,pos=(0,0),orientation=0,i=0,base=0):
             white_panels.add(pos)
         elif colour not in [0,1]:
             break
-        data,i,base,turn = computer(data,colour,i,base)
+        data,i,base,turn = computer(data,[colour],i,base)
         if turn == 0:
             orientation = (orientation - 1)%4
         elif turn == 1:
